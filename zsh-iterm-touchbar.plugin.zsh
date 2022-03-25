@@ -132,7 +132,8 @@ function _displayDefault() {
 
   # CURRENT_DIR
   # -----------
-  setKey 1 "👉 $(echo $PWD | awk -F/ '{print $(NF-1)"/"$(NF)}')" _displayPath '-q'
+  setKey 1 "📂 $(echo $PWD | awk -F/ '{print $(NF-1)"/"$(NF)}')" _displayFolders '-q'
+
 
   # GIT
   # ---
@@ -241,6 +242,7 @@ function _displayBranches() {
   setKey 1 "👈 back" _displayDefault '-q'
 }
 
+# Unused: shows path to current folder and lets you go back
 function _displayPath() {
   _clearTouchbar
   _unbindTouchbar
@@ -256,11 +258,31 @@ function _displayPath() {
   setKey 1 "👈 back" _displayDefault '-q'
 }
 
+# Shows current folder. On folders state it displays a list of folders in
+# current path to traverse it forwards and backwards.
+function _displayFolders() {
+  _clearTouchbar
+  _unbindTouchbar
+  touchBarState='folders'
+
+  directories=$(find . -mindepth 1 -maxdepth 1 -type d  \( ! -iname ".*" \) | sed 's|^\./||g')
+  # Set .. dir to go back
+  setKey 2 ".." "cd .."
+  # Iterate current dir directories
+  fnKeysIndex=3
+  while IFS= read -r dir; do
+    setKey $fnKeysIndex "$dir" "cd $dir"
+    fnKeysIndex=$((fnKeysIndex + 1))
+  done <<< "$directories"
+
+  setKey 1 "👈" _displayDefault '-q'
+}
+
 zle -N _displayDefault
 zle -N _displayNpmScripts
 zle -N _displayYarnScripts
 zle -N _displayBranches
-zle -N _displayPath
+zle -N _displayFolders
 
 precmd_iterm_touchbar() {
   if [[ $touchBarState == 'npm' ]]; then
@@ -269,8 +291,8 @@ precmd_iterm_touchbar() {
     _displayYarnScripts
   elif [[ $touchBarState == 'github' ]]; then
     _displayBranches
-  elif [[ $touchBarState == 'path' ]]; then
-    _displayPath
+  elif [[ $touchBarState == 'folders' ]]; then
+    _displayFolders
   else
     _displayDefault
   fi

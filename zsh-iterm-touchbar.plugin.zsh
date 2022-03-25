@@ -198,7 +198,7 @@ function _displayNpmScripts() {
     setKey $fnKeysIndex $npmScript "npm run $npmScript"
   done
 
-  setKey 1 "👈 back" _displayDefault '-q'
+  setKey 1 "👈" _displayDefault '-q'
 }
 
 function _displayYarnScripts() {
@@ -219,7 +219,7 @@ function _displayYarnScripts() {
     setKey $fnKeysIndex $yarnScript "yarn run $yarnScript"
   done
 
-  setKey 1 "👈 back" _displayDefault '-q'
+  setKey 1 "👈" _displayDefault '-q'
 }
 
 function _displayBranches() {
@@ -239,7 +239,7 @@ function _displayBranches() {
     setKey $fnKeysIndex $branch "git checkout $branch"
   done
 
-  setKey 1 "👈 back" _displayDefault '-q'
+  setKey 1 "👈" _displayDefault '-q'
 }
 
 # Unused: shows path to current folder and lets you go back
@@ -255,7 +255,7 @@ function _displayPath() {
     fnKeysIndex=$((fnKeysIndex + 1))
   done
 
-  setKey 1 "👈 back" _displayDefault '-q'
+  setKey 1 "👈" _displayDefault '-q'
 }
 
 # Shows current folder. On folders state it displays a list of folders in

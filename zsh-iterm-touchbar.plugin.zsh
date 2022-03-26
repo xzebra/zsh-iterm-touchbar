@@ -157,7 +157,14 @@ function _displayDefault() {
     [ -n "${indicators}" ] && touchbarIndicators="🔥[${indicators}]" || touchbarIndicators="🙌";
 
     setKey 2 "🎋 `git_current_branch`" _displayBranches '-q'
-    setKey 3 $touchbarIndicators "git status"
+    # If you have lazygit installed, status will call lazygit instead of just
+    # git status
+    if [[ -x $(which lazygit) ]]; then
+      setKey 3 $touchbarIndicators "lazygit"
+    else
+      setKey 3 $touchbarIndicators "git status"
+    fi
+
     setKey 4 "🔼 push" "git push origin $(git_current_branch)"
     setKey 5 "🔽 pull" "git pull origin $(git_current_branch)"
   else

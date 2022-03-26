@@ -165,25 +165,23 @@ function _displayDefault() {
       setKey 3 $touchbarIndicators "git status"
     fi
 
-    setKey 4 "🔼 push" "git push origin $(git_current_branch)"
-    setKey 5 "🔽 pull" "git pull origin $(git_current_branch)"
+    setKey 4 "🔽 pull" "git pull origin $(git_current_branch)"
   else
     clearKey 2
     clearKey 3
     clearKey 4
-    clearKey 5
   fi
 
   # PACKAGE.JSON
   # ------------
   if [[ $(find-up package.json) != "" ]]; then
       if [[ $(find-up yarn.lock) != "" ]] && [[ "$YARN_ENABLED" = true ]]; then
-          setKey 6 "🐱 yarn-run" _displayYarnScripts '-q'
+          setKey 5 "🐱 yarn-run" _displayYarnScripts '-q'
       else
-          setKey 6 "⚡️ npm-run" _displayNpmScripts '-q'
+          setKey 5 "⚡️ npm-run" _displayNpmScripts '-q'
     fi
   else
-      clearKey 6
+      clearKey 5
   fi
 }
 

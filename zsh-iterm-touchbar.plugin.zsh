@@ -111,6 +111,10 @@ function _unbindTouchbar() {
 }
 
 function setKey(){
+  if [ ${1} -ge 21 ]; then
+    return
+  fi
+
   pecho "\033]1337;SetKeyLabel=F${1}=${2}\a"
   if [ "$4" != "-q" ]; then
     bindkey -s $fnKeys[$1] "$3 \n"
@@ -121,6 +125,31 @@ function setKey(){
 
 function clearKey(){
   pecho "\033]1337;SetKeyLabel=F${1}=F${1}\a"
+}
+
+function is_git_repo() {
+  if [[ "$TOUCHBAR_GIT_ENABLED" = true ]] &&
+    git rev-parse --is-inside-work-tree &>/dev/null &&
+    [[ "$(git rev-parse --is-inside-git-dir 2> /dev/null)" == 'false' ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Returns a list of all the files not ignored by git.
+function find_git_files() {
+  find . -mindepth 1 -maxdepth 1 -type "$1" -not -path './node_modules*' \
+         -a -not -path '*.git*'               \
+         -a -not -path './coverage*'          \
+         -a -not -path './bower_components*'  \
+         -a -not -name '*~'                   \
+         -exec sh -c '
+           for f do
+             git check-ignore -q "$f" ||
+             echo "$f"
+           done
+         ' find-sh {} +
 }
 
 function _displayDefault() {
@@ -138,10 +167,7 @@ function _displayDefault() {
   # GIT
   # ---
   # Check if the current directory is a git repository and not the .git directory
-  if [[ "$TOUCHBAR_GIT_ENABLED" = true ]] &&
-    git rev-parse --is-inside-work-tree &>/dev/null &&
-    [[ "$(git rev-parse --is-inside-git-dir 2> /dev/null)" == 'false' ]]; then
-
+  if is_git_repo; then
     # Ensure the index is up to date.
     git update-index --really-refresh -q &>/dev/null
 
@@ -263,22 +289,41 @@ function _displayPath() {
   setKey 1 "👈" _displayDefault '-q'
 }
 
-# Shows current folder. On folders state it displays a list of folders in
-# current path to traverse it forwards and backwards.
+# Shows current folder contents. Allows traversing current path forwards and
+# backwards, and also edit files.
 function _displayFolders() {
   _clearTouchbar
   _unbindTouchbar
   touchBarState='folders'
 
-  directories=$(find . -mindepth 1 -maxdepth 1 -type d  \( ! -iname ".*" \) | sed 's|^\./||g')
+  # Find both directories and files
+  if is_git_repo; then
+    # If it is a git repo, only list things not included in .gitignore
+    directories=$(find_git_files "d" | sed 's|^\./||g')
+    files=$(find_git_files "f" | sed 's|^\./||g')
+  else
+    directories=$(find . -mindepth 1 -maxdepth 1 -type d  \( ! -iname ".*" \) | sed 's|^\./||g')
+    files=$(find . -mindepth 1 -maxdepth 1 -type f  \( ! -iname ".*" \) | sed 's|^\./||g')
+  fi
   # Set .. dir to go back
-  setKey 2 ".." "cd .."
+  setKey 2 "📂 .." "cd .."
   # Iterate current dir directories
   fnKeysIndex=3
   while IFS= read -r dir; do
-    setKey $fnKeysIndex "$dir" "cd $dir"
+    if [ -z "$dir" ]; then
+      continue
+    fi
+    setKey $fnKeysIndex "📂 $dir" "cd $dir"
     fnKeysIndex=$((fnKeysIndex + 1))
   done <<< "$directories"
+
+  while IFS= read -r file; do
+    if [ -z "$file" ]; then
+      continue
+    fi
+    setKey $fnKeysIndex "📄 $file" "vim $file"
+    fnKeysIndex=$((fnKeysIndex + 1))
+  done <<< "$files"
 
   setKey 1 "👈" _displayDefault '-q'
 }
